@@ -5,7 +5,7 @@ import "fmt"
 
 
 func AddTask(tasks []Task, item string) []Task {
-	newTask := Task{Item: item, Done: false}
+	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
 	return append(tasks, newTask)
 }
 
