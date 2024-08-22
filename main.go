@@ -6,7 +6,11 @@ import (
 
 
 func main() {
-    tasks := mockTasks 
+    tasks, err := loadTasks()
+		if err != nil {
+			fmt.Printf("Error loading tasks: %v\n", err)
+			return
+		} 
 
     for {
         fmt.Println("\nWelcome to Task Manager! Please choose what you want to do:")
@@ -28,12 +32,18 @@ func main() {
             fmt.Print("Enter the task you want to add: ")
             fmt.Scanln(&newTask)
             tasks = AddTask(tasks, newTask)
+			if err := saveTasks(tasks); err != nil {
+				fmt.Printf("Error saving tasks: %v\n", err)
+			}
             ListTasks(tasks)
         case 3:
             var taskToComplete int
             fmt.Print("Enter the number of the task you want to mark as completed: ")
             fmt.Scanln(&taskToComplete)
             tasks = CompleteTask(tasks, taskToComplete)
+			if err := saveTasks(tasks); err != nil { 
+				fmt.Printf("Error saving tasks: %v\n", err)
+			}
             ListTasks(tasks)
         case 4:
             var taskToDelete int
@@ -41,6 +51,9 @@ func main() {
             ListTasks(tasks)
             fmt.Scanln(&taskToDelete)
             tasks = DeleteTask(tasks, taskToDelete)
+			if err := saveTasks(tasks); err != nil {
+				fmt.Printf("Error saving tasks: %v\n", err)
+			}
             ListTasks(tasks)
         case 5:
             fmt.Println("Thank you for using Task Manager. Goodbye!")
