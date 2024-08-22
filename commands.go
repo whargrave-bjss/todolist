@@ -1,9 +1,40 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"encoding/json")
 
 
+const filename = "tasks.json"
 
+func loadTasks() ([]Task, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var taskList TaskList
+	err = json.Unmarshal(data, &taskList)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling data: %v", err)
+	}
+	return taskList.Tasks, nil
+} 
+
+func saveTasks(tasks []Task) error {
+	taskList := TaskList{Tasks: tasks}
+	data, err := json.Marshal(taskList)
+	if err != nil {
+		return fmt.Errorf("error marshalling data: %v", err)
+	}
+
+	err = os.WriteFile(filename, data, 0644)
+	if err != nil { 
+		return fmt.Errorf("error writing to file: %v", err)
+	}
+	return nil
+}
 func AddTask(tasks []Task, item string) []Task {
 	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
 	return append(tasks, newTask)
