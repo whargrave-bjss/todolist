@@ -57,7 +57,7 @@ var mockTasks = []Task{
 	},
 }
 func main() {
-    tasks := mockTasks // Start with your mock tasks
+    tasks := mockTasks 
 
     for {
         fmt.Println("\nWelcome to Task Manager! Please choose what you want to do:")
@@ -95,7 +95,7 @@ func main() {
             ListTasks(tasks)
         case 5:
             fmt.Println("Thank you for using Task Manager. Goodbye!")
-            return // This will exit the program
+            return 
         default:
             fmt.Println("Invalid choice. Please try again.")
         }
