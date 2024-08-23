@@ -79,14 +79,15 @@ func DeleteTask(tasks []Task, itemToDelete int) []Task {
 				if confirm != "yes" { 
 					fmt.Println("Task not deleted")
 					return tasks
-				} else {
-					fmt.Printf("%s has been deleted\n", task.Item)
-					tasks = append(tasks[:i], tasks[i+1:]...)
-				}
-			} 
+				} 
+			} else {
+				fmt.Printf("%s has been deleted\n", task.Item)
+				tasks = append(tasks[:i], tasks[i+1:]...)
+			}
+		} else {
+			fmt.Println("Task not found")
 		}
 	}
-	fmt.Println("Task not found")
 	return resetIDs(tasks)
 }
 
@@ -97,4 +98,14 @@ func DeleteAllCompleteTasks(tasks []Task) []Task {
 		}
 	}
 	return tasks
+}
+
+func CompletedCount(tasks []Task) {
+	count := 0
+	for _, task := range tasks {
+		if task.Done {
+			count++
+		}
+	}
+	fmt.Printf("You have %d completed tasks\n", count)
 }
