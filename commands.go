@@ -63,9 +63,10 @@ func CompleteTask(tasks []Task, itemToComplete int)  []Task {
 	for i, task := range tasks {
 		if task.ID == itemToComplete { 
 			tasks[i].Done = true
+		} else {
+			fmt.Println("Task not found")
 		}
 	}
-	fmt.Println("Task not found")
 	return tasks
 }
 
@@ -100,12 +101,12 @@ func DeleteAllCompleteTasks(tasks []Task) []Task {
 	return tasks
 }
 
-func CompletedCount(tasks []Task) {
+func CompletedCount(tasks []Task) int{
 	count := 0
 	for _, task := range tasks {
 		if task.Done {
 			count++
 		}
 	}
-	fmt.Printf("You have %d completed tasks\n", count)
+	return count
 }

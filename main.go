@@ -17,7 +17,7 @@ func main() {
 			return
 		} 
 	tasks = resetIDs(tasks)
-   
+    completedCount := CompletedCount(tasks) 
     for {
         fmt.Println("\nWelcome to Task Manager! Please choose what you want to do:")
         fmt.Println("1. List tasks")
@@ -72,6 +72,18 @@ func main() {
 				fmt.Printf("Error saving tasks: %v\n", err)
 			}
             ListTasks(tasks)
+			fmt.Printf("You still have %d completed tasks on your list do you want to delete all of them? 'yes' or 'no'\n", completedCount)
+			var confirm string
+			fmt.Scanln(&confirm)
+            if confirm == "yes" || confirm == "y" {
+				tasks = DeleteAllCompleteTasks(tasks)
+				if err := saveTasks(tasks); err != nil {
+					fmt.Printf("Error saving tasks: %v\n", err)
+				}
+				fmt.Printf("All completed tasks have been deleted\n")
+				fmt.Printf("Printing updated list of tasks....")
+				ListTasks(tasks)
+			}
 			BackHome()
         case 5:
             fmt.Println("Thank you for using Task Manager. Goodbye!")
