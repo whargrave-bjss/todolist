@@ -11,6 +11,7 @@ func BackHome() {
 }
 
 func main() {
+	Serve()
     tasks, err := loadTasks()
 		if err != nil {
 			fmt.Printf("Error loading tasks: %v\n", err)
