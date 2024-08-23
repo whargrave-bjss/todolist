@@ -16,7 +16,8 @@ func main() {
 			fmt.Printf("Error loading tasks: %v\n", err)
 			return
 		} 
-
+	tasks = resetIDs(tasks)
+   
     for {
         fmt.Println("\nWelcome to Task Manager! Please choose what you want to do:")
         fmt.Println("1. List tasks")

@@ -23,6 +23,7 @@ func loadTasks() ([]Task, error) {
 } 
 
 func saveTasks(tasks []Task) error {
+	tasks = resetIDs(tasks)
 	taskList := TaskList{Tasks: tasks}
 	data, err := json.Marshal(taskList)
 	if err != nil {
@@ -35,9 +36,17 @@ func saveTasks(tasks []Task) error {
 	}
 	return nil
 }
+
+func resetIDs(tasks []Task) []Task {
+	for i := range tasks {
+		tasks[i].ID = i + 1
+	}
+	return tasks
+}
 func AddTask(tasks []Task, item string) []Task {
 	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
-	return append(tasks, newTask)
+	tasks = append(tasks, newTask)
+	return resetIDs(tasks)
 }
 
 func ListTasks(tasks []Task) {
@@ -72,15 +81,20 @@ func DeleteTask(tasks []Task, itemToDelete int) []Task {
 					return tasks
 				} else {
 					fmt.Printf("%s has been deleted\n", task.Item)
-					return append(tasks[:i], tasks[i+1:]...)
+					tasks = append(tasks[:i], tasks[i+1:]...)
 				}
 			} 
 		}
 	}
 	fmt.Println("Task not found")
-	return tasks
+	return resetIDs(tasks)
 }
 
-
-
-
+func DeleteAllCompleteTasks(tasks []Task) []Task {
+	for i, task := range tasks {
+		if task.Done {
+			tasks = append(tasks[:i], tasks[i+1:]...)
+		}
+	}
+	return tasks
+}
