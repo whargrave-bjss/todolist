@@ -62,8 +62,19 @@ func CompleteTask(tasks []Task, itemToComplete int)  []Task {
 
 func DeleteTask(tasks []Task, itemToDelete int) []Task {
 	for i, task := range tasks {
-		if task.ID == itemToDelete { 
-			return append(tasks[:i], tasks[i+1:]...)
+		if task.ID == itemToDelete {
+			if !task.Done {
+				fmt.Printf((" %s is not completed. Are you sure you want to delete it? it\n"), task.Item)
+				var confirm string
+				fmt.Scanln(&confirm)
+				if confirm != "yes" { 
+					fmt.Println("Task not deleted")
+					return tasks
+				} else {
+					fmt.Printf("%s has been deleted\n", task.Item)
+					return append(tasks[:i], tasks[i+1:]...)
+				}
+			} 
 		}
 	}
 	fmt.Println("Task not found")
