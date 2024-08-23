@@ -2,8 +2,13 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
+func BackHome() {
+	fmt.Printf("Putting you back to home screen.....")
+	time.Sleep(1 * time.Second)
+}
 
 func main() {
     tasks, err := loadTasks()
@@ -27,6 +32,9 @@ func main() {
         switch choice {
         case 1:
             ListTasks(tasks)
+			time.Sleep(2 * time.Second)
+			fmt.Printf("Putting you back to home screen.....")
+			time.Sleep(1 * time.Second)
         case 2:
             var newTask string
             fmt.Print("Enter the task you want to add: ")
@@ -35,16 +43,24 @@ func main() {
 			if err := saveTasks(tasks); err != nil {
 				fmt.Printf("Error saving tasks: %v\n", err)
 			}
+			fmt.Printf("%s has been added to the list of tasks\n", newTask)
+			fmt.Printf("Updating the list....")
+			time.Sleep(1 * time.Second)
             ListTasks(tasks)
+			BackHome()
         case 3:
             var taskToComplete int
+			ListTasks(tasks)
             fmt.Print("Enter the number of the task you want to mark as completed: ")
             fmt.Scanln(&taskToComplete)
             tasks = CompleteTask(tasks, taskToComplete)
 			if err := saveTasks(tasks); err != nil { 
 				fmt.Printf("Error saving tasks: %v\n", err)
 			}
+			fmt.Printf("Printing updated list of tasks....")
+			time.Sleep(1 * time.Second)
             ListTasks(tasks)
+			BackHome()
         case 4:
             var taskToDelete int
             fmt.Println("Enter the number of the task you want to delete:")
@@ -55,6 +71,7 @@ func main() {
 				fmt.Printf("Error saving tasks: %v\n", err)
 			}
             ListTasks(tasks)
+			BackHome()
         case 5:
             fmt.Println("Thank you for using Task Manager. Goodbye!")
             return 
