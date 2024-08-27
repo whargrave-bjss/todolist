@@ -1,25 +1,8 @@
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/tasks.json')
-    .then(response => response.json())
-    .then(data => {
-        const taskList = document.getElementById('task-list')
-        data.Tasks.forEach(task => {
-            const li = document.createElement('li')
-            li.textContent = task.Item
-            if (task.Done) {
-                li.style.textDecoration = 'line-through'
-            }
-            taskList.appendChild(li)
-        })
-    })
-    .catch(error => console.error('Error loading tasks:', error))
-})
-
 document.addEventListener('DOMContentLoaded', function() {
     const addTaskForm = document.getElementById('add-task-form');
     const newTaskInput = document.getElementById('new-task');
+    const taskList = document.getElementById('task-list');
+    
 
     const addTask = async (task) => {
         try {
@@ -54,6 +37,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    
+    taskList.addEventListener('click', async function(event) {
+        if  (event.target.classList.contains('delete-button')) {
+            const taskId = event.target.dataset.taskId;
+            try {
+                await deleteTask(taskId);
+                loadTasks();
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+    });
+    loadTasks(); 
+});
+
+const deleteTask = async (taskId) => {
+    try {
+        const response = await fetch(`http://localhost:3000/delete-task/${taskId}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        throw error;
+    }
+};
+    
+
     function loadTasks() {
         fetch('/tasks.json')
             .then(response => response.json())
@@ -62,14 +76,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 taskList.innerHTML = ''; // Clear existing tasks
                 data.Tasks.forEach(task => {
                     const li = document.createElement('li');
-                    li.textContent = task.Item;
+                    const taskText = document.createElement('span');
+                    taskText.textContent = task.Item;
                     if (task.Done) {
                         li.style.textDecoration = 'line-through';
                     }
+                    li.appendChild(taskText);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.className = 'delete-button';
+                    deleteButton.dataset.taskId = task.ID;
+                    li.appendChild(deleteButton);
                     taskList.appendChild(li);
                 });
             })
             .catch(error => console.error('Error loading tasks:', error));
     }
-    loadTasks();
-});
