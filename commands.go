@@ -110,3 +110,33 @@ func CompletedCount(tasks []Task) int{
 	}
 	return count
 }
+
+func getServerStatus() string {
+	return "Server is running"
+}
+
+func getAllTasks() []string{
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Printf("Error loading tasks: %v\n", err)
+	}
+	return tasks
+}
+
+func getTaskStatus(taskId int) {
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Printf("Error loading tasks: %v\n", err)
+	}
+	for _, task := range tasks {
+		if task.ID == taskId {
+			status := "❌"
+			if task.Done {
+				status = "✅"
+			}
+			fmt.Printf("%d %s - %s\n", task.ID, task.Item, status)
+			return
+		}
+	}
+	fmt.Println("Task not found")
+}
