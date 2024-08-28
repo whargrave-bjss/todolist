@@ -1,27 +1,13 @@
+import { addTask } from "./apiservice/addTask";
+import { deleteTask } from "./apiservice/deleteTask";
+
 document.addEventListener('DOMContentLoaded', function() {
     const addTaskForm = document.getElementById('add-task-form');
     const newTaskInput = document.getElementById('new-task');
     const taskList = document.getElementById('task-list');
     
 
-    const addTask = async (task) => {
-        try {
-            const response = await fetch('http://localhost:3000/add-task', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ Item: task, Done: false })
-            });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error adding task:', error);
-            throw error;
-        }
-    };
+  
 
     addTaskForm.addEventListener('submit', async function(event) {
         event.preventDefault();
@@ -52,21 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTasks(); 
 });
 
-const deleteTask = async (taskId) => {
-    try {
-        const response = await fetch(`http://localhost:3000/delete-task/${taskId}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Error deleting task:', error);
-        throw error;
-    }
-};
-    
 
     function loadTasks() {
         fetch('/tasks.json')
