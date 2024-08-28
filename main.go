@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"html/template"
 )
 
 
 func main() {
-	http.HandleFunc("/add-task", addTaskHandler)
-	http.HandleFunc("/delete-task/", deleteTaskHandler)
 	Serve()
 }
 //handler functions
@@ -91,4 +90,29 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Task deleted successfully"})
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+    tmpl, err := template.ParseFiles("layout.html")
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    tasks, err := loadTasks() // Your existing function to load tasks
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    data := struct {
+        Tasks []Task
+    }{
+        Tasks: tasks,
+    }
+
+    err = tmpl.Execute(w, data)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+    }
 }

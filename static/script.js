@@ -1,5 +1,5 @@
-import { addTask } from "./apiservice/addTask";
-import { deleteTask } from "./apiservice/deleteTask";
+import { addTask } from "../apiservice/addTask";
+import { deleteTask } from "../apiservice/deleteTask";
 
 document.addEventListener('DOMContentLoaded', function() {
     const addTaskForm = document.getElementById('add-task-form');

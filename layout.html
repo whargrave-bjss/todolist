@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/static/styles.css">
     <title>To Do List Application</title>
 </head>
 <body>
@@ -14,12 +14,18 @@
             <input type="text" id="new-task" placeholder="Enter a new task">
             <button id="add-button">Add Task</button>
         </form>
-
+        <!-- htmlhint ignore:start-->
         <ul id="task-list">
-            
+            {{range .Tasks}}
+                <li data-id="{{.ID}}">
+                    <span class="{{if .Done}}completed{{end}}">{{.Item}}</span>
+                    <button class="delete-button">Delete</button>
+                </li>
+            {{end}}
         </ul>
     </div>
+    <!-- htmlhint ignore:end -->
 
-    <script src="script.js" type="module"></script>
+    <script src="/static/script.js" type="module"></script>
 </body>
 </html>
