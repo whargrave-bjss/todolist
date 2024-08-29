@@ -19,20 +19,22 @@ type Command struct {
 
 
 func main() {
+
+	
 	commandChan := make(chan Command)
 	go commandHandler(commandChan)
 
-	// Set up HTTP handlers
+	
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/add-task", addTaskHandler)
 	http.HandleFunc("/delete-task/", deleteTaskHandler)
 	http.HandleFunc("/update-task/", updateTaskHandler)
 
-	// Set up static file server
+
 	fs := customFileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Start the HTTP server in a goroutine
+	// http goroutine
 	go func() {
 		log.Println("Listening on :3000...")
 		err := http.ListenAndServe(":3000", nil)
@@ -41,10 +43,10 @@ func main() {
 		}
 	}()
 
-	// Run the CLI in the main goroutine
+	// CLI goroutine
 	for {
-		fmt.Println("\nAvailable commands: 1: Server_Status, 2: TASKS")
-		fmt.Print("Enter command '1' or '2': ")
+		fmt.Println("\nAvailable commands: 1: Server_Status, 2: TASKS 3: Add Task 4: Delete Task 5: Complete Task Q: Quit")
+		fmt.Print("Enter command '1', '2', '3', '4', '5': ")
 		var input string
 		fmt.Scanln(&input)
 
@@ -66,7 +68,7 @@ func main() {
 
 		commandChan <- cmd
 		response := <-cmd.ResponseChan
-		fmt.Println("Response:", response)
+		fmt.Println(response)
 	}
 }
 
@@ -82,6 +84,12 @@ func commandHandler(commandChan <-chan Command) {
 				response = getServerStatus()
 			case "2":
 				response = getAllTasks()
+			case "3":
+			var newTask string
+             fmt.Print("Enter the task you want to add: ")
+             fmt.Scanln(&newTask)
+             AddTask(newTask)
+			 fmt.Printf("%s has been added to the list of tasks\n", newTask)
 			default: 
 				response = "Invalid command"
 			}
@@ -175,7 +183,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    tasks, err := loadTasks() // Your existing function to load tasks
+    tasks, err := loadTasks() 
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -217,13 +225,11 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
-
     tasks, err := loadTasks()
     if err != nil {
         http.Error(w, "Failed to load tasks", http.StatusInternalServerError)
         return
     }
-
     var updatedTask *Task
     for i := range tasks {
         if tasks[i].ID == taskID {
@@ -232,17 +238,14 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
             break
         }
     }
-
     if updatedTask == nil {
         http.Error(w, "Task not found", http.StatusNotFound)
         return
     }
-
     if err := saveTasks(tasks); err != nil {
         http.Error(w, "Failed to save tasks", http.StatusInternalServerError)
         return
     }
-
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(updatedTask)
 }

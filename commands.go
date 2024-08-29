@@ -46,9 +46,17 @@ func resetIDs(tasks []Task) []Task {
 	}
 	return tasks
 }
-func AddTask(tasks []Task, item string) []Task {
+func AddTask(item string) []Task {
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Printf("Error loading tasks: %v\n", err)
+	}
 	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
 	tasks = append(tasks, newTask)
+	err = saveTasks(tasks)
+	if err != nil {
+		fmt.Printf("Error saving tasks: %v\n", err)
+	}
 	return resetIDs(tasks)
 }
 

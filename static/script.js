@@ -69,11 +69,10 @@ function loadTasks() {
         .then(response => response.json())
         .then(data => {
             const taskList = document.getElementById('task-list');
-            taskList.innerHTML = ''; // Clear existing tasks
+            taskList.innerHTML = '';
             data.Tasks.forEach(task => {
                 const li = document.createElement('li');
-                li.setAttribute('data-task-id', task.ID); // Set the ID as an attribute
-                
+                li.setAttribute('data-task-id', task.ID); 
                 const taskText = document.createElement('span');
                 taskText.textContent = task.Item;
                 if (task.Done) {
