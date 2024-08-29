@@ -70,18 +70,30 @@ func ListTasks(tasks []Task) {
 	}
 }
 
-func CompleteTask(tasks []Task, itemToComplete int)  []Task {
+func CompleteTask(itemToComplete int)  []Task {
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Printf("Error loading tasks: %v\n", err)
+	}
 	for i, task := range tasks {
 		if task.ID == itemToComplete { 
 			tasks[i].Done = true
 		} else {
 			fmt.Println("Task not found")
 		}
+		err = saveTasks(tasks)
+		if err != nil {
+			fmt.Printf("Error saving tasks: %v\n", err)
+		}		
 	}
-	return tasks
-}
+	return resetIDs(tasks)}
 
-func DeleteTask(tasks []Task, itemToDelete int) []Task {
+
+func DeleteTask(itemToDelete int) []Task {
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Printf("Error loading tasks: %v\n", err)
+	}
 	for i, task := range tasks {
 		if task.ID == itemToDelete {
 			if !task.Done {
@@ -96,9 +108,7 @@ func DeleteTask(tasks []Task, itemToDelete int) []Task {
 				fmt.Printf("%s has been deleted\n", task.Item)
 				tasks = append(tasks[:i], tasks[i+1:]...)
 			}
-		} else {
-			fmt.Println("Task not found")
-		}
+		} 
 	}
 	return resetIDs(tasks)
 }

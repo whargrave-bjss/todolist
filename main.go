@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"html/template"
-	"log"
 )
 
 type Command struct {
@@ -85,11 +85,21 @@ func commandHandler(commandChan <-chan Command) {
 			case "2":
 				response = getAllTasks()
 			case "3":
-			var newTask string
+			 var newTask string
              fmt.Print("Enter the task you want to add: ")
              fmt.Scanln(&newTask)
              AddTask(newTask)
 			 fmt.Printf("%s has been added to the list of tasks\n", newTask)
+			case "4":
+			 var taskToDelete int
+             fmt.Println("Enter the number of the task you want to delete:")
+             fmt.Scanln(&taskToDelete)
+             DeleteTask(taskToDelete)
+			case "5":
+			var taskToComplete int
+             fmt.Print("Enter the number of the task you want to mark as completed: ")
+             fmt.Scanln(&taskToComplete)
+             CompleteTask(taskToComplete)
 			default: 
 				response = "Invalid command"
 			}
