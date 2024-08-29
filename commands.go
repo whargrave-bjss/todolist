@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"encoding/json")
+	"strings"
+	"time"
+)
 
 
 const filename = "tasks.json"
@@ -111,32 +114,31 @@ func CompletedCount(tasks []Task) int{
 	return count
 }
 
+var startTune time.Time
+
+func init() {
+	startTune = time.Now()
+}
+
+
 func getServerStatus() string {
-	return "Server is running"
+	uptime := time.Since(startTune)
+	return fmt.Sprintf("Server uptime: %v", uptime)
 }
 
-func getAllTasks() []string{
+func getAllTasks() string{
 	tasks, err := loadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
-	return tasks
-}
-
-func getTaskStatus(taskId int) {
-	tasks, err := loadTasks()
-	if err != nil {
-		fmt.Printf("Error loading tasks: %v\n", err)
-	}
-	for _, task := range tasks {
-		if task.ID == taskId {
-			status := "❌"
-			if task.Done {
-				status = "✅"
-			}
-			fmt.Printf("%d %s - %s\n", task.ID, task.Item, status)
-			return
+	var result strings.Builder
+	for _, task := range tasks { 
+		status := "❌"
+		if task.Done {
+			status = "✅"
 		}
+		fmt.Fprintf(&result, "%d %s - %s\n", task.ID, task.Item, status)
 	}
-	fmt.Println("Task not found")
+	return result.String()
 }
+

@@ -22,34 +22,66 @@ func main() {
 	commandChan := make(chan Command)
 	go commandHandler(commandChan)
 
-
+	// Set up HTTP handlers
 	http.HandleFunc("/", homeHandler)
-    http.HandleFunc("/add-task", addTaskHandler)
-    http.HandleFunc("/delete-task/", deleteTaskHandler)
+	http.HandleFunc("/add-task", addTaskHandler)
+	http.HandleFunc("/delete-task/", deleteTaskHandler)
 	http.HandleFunc("/update-task/", updateTaskHandler)
-    
-    // Use the customFileServer here
-    fs := customFileServer(http.Dir("static"))
-    http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-    log.Println("Listening on :3000...")
-    err := http.ListenAndServe(":3000", nil)
-    if err != nil {
-        log.Fatal(err)
-    }
+	// Set up static file server
+	fs := customFileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	// Start the HTTP server in a goroutine
+	go func() {
+		log.Println("Listening on :3000...")
+		err := http.ListenAndServe(":3000", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	// Run the CLI in the main goroutine
+	for {
+		fmt.Println("\nAvailable commands: 1: Server_Status, 2: TASKS")
+		fmt.Print("Enter command '1' or '2': ")
+		var input string
+		fmt.Scanln(&input)
+
+		parts := strings.Fields(input)
+		if len(parts) == 0 {
+			continue
+		}
+
+		cmd := Command{Type: parts[0], ResponseChan: make(chan string)}
+
+		if cmd.Type == "TASK_STATUS" && len(parts) > 1 {
+			taskID, err := strconv.Atoi(parts[1])
+			if err != nil {
+				fmt.Println("Invalid task ID")
+				continue
+			}
+			cmd.Args = strconv.Itoa(taskID)
+		}
+
+		commandChan <- cmd
+		response := <-cmd.ResponseChan
+		fmt.Println("Response:", response)
+	}
 }
+
+
+
 
 func commandHandler(commandChan <-chan Command) {
 	for cmd := range commandChan {
 		go func(cmd Command) {
 			var response string
 			switch cmd.Type {
-			case "Server_Status":
+			case "1":
 				response = getServerStatus()
-			case "ALL_TASKS":
+			case "2":
 				response = getAllTasks()
-			case "TASK_STATUS":
-				response = getTaskStatus(cmd.Args)
 			default: 
 				response = "Invalid command"
 			}
