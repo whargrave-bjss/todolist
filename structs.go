@@ -9,3 +9,9 @@ type Task struct {
 type TaskList struct {
 	Tasks []Task `json:"Tasks"`
 }
+
+type Command struct {
+	Type string
+	Args string
+	ResponseChan chan string
+}

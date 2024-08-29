@@ -10,11 +10,7 @@ import (
 	"strings"
 )
 
-type Command struct {
-	Type string
-	Args string
-	ResponseChan chan string
-}
+
 
 
 
@@ -56,16 +52,6 @@ func main() {
 		}
 
 		cmd := Command{Type: parts[0], ResponseChan: make(chan string)}
-
-		if cmd.Type == "TASK_STATUS" && len(parts) > 1 {
-			taskID, err := strconv.Atoi(parts[1])
-			if err != nil {
-				fmt.Println("Invalid task ID")
-				continue
-			}
-			cmd.Args = strconv.Itoa(taskID)
-		}
-
 		commandChan <- cmd
 		response := <-cmd.ResponseChan
 		fmt.Println(response)
@@ -73,9 +59,7 @@ func main() {
 }
 
 
-
-
-func commandHandler(commandChan <-chan Command) {
+func commandHandler(commandChan chan Command) {
 	for cmd := range commandChan {
 		go func(cmd Command) {
 			var response string
@@ -100,6 +84,9 @@ func commandHandler(commandChan <-chan Command) {
              fmt.Print("Enter the number of the task you want to mark as completed: ")
              fmt.Scanln(&taskToComplete)
              CompleteTask(taskToComplete)
+			case "Q":
+				response = "Quitting..."
+				close(commandChan)
 			default: 
 				response = "Invalid command"
 			}
