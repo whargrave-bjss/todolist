@@ -17,6 +17,7 @@
         <!-- this should ignore but doesn't for some reason -->
         <!-- htmlhint ignore:start-->
         <ul id="task-list">
+        <!-- htmlhint ignore:end -->
             {{range .Tasks}}
                 <li data-id="{{.ID}}">
                     <span class="{{if .Done}}completed{{end}}">{{.Item}}</span>
@@ -26,7 +27,7 @@
             {{end}}
         </ul>
     </div>
-    <!-- htmlhint ignore:end -->
+
 
     <script src="/static/script.js" type="module"></script>
 </body>
