@@ -16,9 +16,9 @@ import (
 
 func main() {
 
-	
+	done := make(chan struct{})
 	commandChan := make(chan Command)
-	go commandHandler(commandChan)
+	go commandHandler(commandChan, done)
 
 	
 	http.HandleFunc("/", homeHandler)
@@ -37,6 +37,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		close(done)
 	}()
 
 	// CLI goroutine
@@ -45,6 +46,11 @@ func main() {
 		fmt.Print("Enter command '1', '2', '3', '4', '5': ")
 		var input string
 		fmt.Scanln(&input)
+
+		if input == "Q" {
+			close(done)
+			break
+		}
 
 		parts := strings.Fields(input)
 		if len(parts) == 0 {
@@ -56,44 +62,50 @@ func main() {
 		response := <-cmd.ResponseChan
 		fmt.Println(response)
 	}
+
+	<-done
+	fmt.Println("Application shutting down...")
 }
 
 
-func commandHandler(commandChan chan Command) {
-	for cmd := range commandChan {
-		go func(cmd Command) {
-			var response string
-			switch cmd.Type {
-			case "1":
-				response = getServerStatus()
-			case "2":
-				response = getAllTasks()
-			case "3":
-			 var newTask string
-             fmt.Print("Enter the task you want to add: ")
-             fmt.Scanln(&newTask)
-             AddTask(newTask)
-			 fmt.Printf("%s has been added to the list of tasks\n", newTask)
-			case "4":
-			 var taskToDelete int
-             fmt.Println("Enter the number of the task you want to delete:")
-             fmt.Scanln(&taskToDelete)
-             DeleteTask(taskToDelete)
-			case "5":
-			var taskToComplete int
-             fmt.Print("Enter the number of the task you want to mark as completed: ")
-             fmt.Scanln(&taskToComplete)
-             CompleteTask(taskToComplete)
-			case "Q":
-				response = "Quitting..."
-				close(commandChan)
-			default: 
-				response = "Invalid command"
-			}
-			cmd.ResponseChan <- response
-		}(cmd)
-	}
+func commandHandler(commandChan chan Command, done chan struct{}) {
+    for {
+        select {
+        case <-done:
+            return
+        case cmd := <-commandChan:
+            var response string
+            switch cmd.Type {
+            case "1":
+                response = getServerStatus()
+            case "2":
+                response = getAllTasks()
+            case "3":
+                var newTask string
+                fmt.Print("Enter the task you want to add: ")
+                fmt.Scanln(&newTask)
+                AddTask(newTask)
+                response = fmt.Sprintf("%s has been added to the list of tasks", newTask)
+            case "4":
+                var taskToDelete int
+                fmt.Println("Enter the number of the task you want to delete:")
+                fmt.Scanln(&taskToDelete)
+                DeleteTask(taskToDelete)
+                response = "Task deleted"
+            case "5":
+                var taskToComplete int
+                fmt.Print("Enter the number of the task you want to mark as completed: ")
+                fmt.Scanln(&taskToComplete)
+                CompleteTask(taskToComplete)
+                response = "Task marked as completed"
+            default:
+                response = "Invalid command"
+            }
+            cmd.ResponseChan <- response
+        }
+    }
 }
+
 //handler functions
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
