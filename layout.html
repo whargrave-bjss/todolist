@@ -7,27 +7,7 @@
     <title>To Do List Application</title>
 </head>
 <body>
-    <div class="container">
-        <h1>My Todo List</h1>
-        
-        <form id="add-task-form" class="add-task">
-            <input type="text" id="new-task" placeholder="Enter a new task">
-            <button id="add-button">Add Task</button>
-        </form>
-        <!-- this should ignore but doesn't for some reason -->
-        <!-- htmlhint ignore:start-->
-        <ul id="task-list">
-        <!-- htmlhint ignore:end -->
-            {{range .Tasks}}
-                <li data-id="{{.ID}}">
-                    <span class="{{if .Done}}completed{{end}}">{{.Item}}</span>
-                    <button class="delete-button">Delete</button>
-                    <button class="update-button">Done</button>
-                </li>
-            {{end}}
-        </ul>
-    </div>
-
+ 
 
     <script src="/static/script.js" type="module"></script>
 </body>

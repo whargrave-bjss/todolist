@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-
-
-
-
 func main() {
 
 	done := make(chan struct{})
