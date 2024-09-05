@@ -3,11 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+    "log"
 )
+
 
 func commandHandler(commandChan chan Command, done chan struct{}) {
     for {
@@ -49,6 +50,7 @@ func commandHandler(commandChan chan Command, done chan struct{}) {
 
 //handler functions
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
+    enableCORS(&w, r)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -79,20 +81,68 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
+    enableCORS(&w, r)
+    if r.Method == "OPTIONS" {
+        return
+    }
 
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 3 { 
-		http.Error(w, "Invalid request path", http.StatusBadRequest)
-		return
-	}
+    if r.Method != "DELETE" {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
 
-	taskId, err := strconv.Atoi(parts[len(parts)-1])
-	if err != nil { 
-		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+    // Log the full request URL
+    log.Printf("Delete request received for path: %s", r.URL.Path)
+
+    // Extract the ID from the URL
+    parts := strings.Split(r.URL.Path, "/")
+    log.Printf("URL parts: %v", parts)
+
+    if len(parts) < 4 {
+        http.Error(w, "Invalid request path", http.StatusBadRequest)
+        return
+    }
+
+    taskId, err := strconv.Atoi(parts[len(parts)-1])
+    if err != nil {
+        http.Error(w, "Invalid task ID", http.StatusBadRequest)
+        return
+    }
+
+
+    tasks, err := loadTasks()
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    var taskDeleted bool
+    for i, task := range tasks {
+        if task.ID == taskId {
+            tasks = append(tasks[:i], tasks[i+1:]...)
+            taskDeleted = true
+            break
+        }
+    }
+
+    if !taskDeleted {
+        http.Error(w, "Task not found", http.StatusNotFound)
+        return
+    }
+
+    err = saveTasks(tasks)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]string{"message": "Task deleted successfully"})
+}
+
+func tasksHandler(w http.ResponseWriter, r *http.Request) {
+	enableCORS(&w, r)
+	if r.Method == "OPTIONS" {
 		return
 	}
 
@@ -102,57 +152,18 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var taskDeleted bool 
-	for i, task := range tasks {
-		if task.ID == taskId {
-			tasks = append(tasks[:i], tasks[i+1:]...)
-			taskDeleted = true
-			break
-		}
-	}
-
-	if !taskDeleted {
-		http.Error(w, "Task not found", http.StatusNotFound)
-		return
-	}
-
-	err = saveTasks(tasks)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"message": "Task deleted successfully"})
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tasks)
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-    tmpl, err := template.ParseFiles("layout.html")
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    tasks, err := loadTasks() 
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    data := struct {
-        Tasks []Task
-    }{
-        Tasks: tasks,
-    }
-
-    err = tmpl.Execute(w, data)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-    }
-}
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPatch {
+    enableCORS(&w, r)
+    if r.Method == "OPTIONS" {
+        return
+    }
+
+    if r.Method != "PATCH" {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
         return
     }
@@ -200,16 +211,14 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(updatedTask)
 }
 
-func customFileServer(fs http.FileSystem) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("Requested file: %s\n", r.URL.Path)
-        w.Header().Set("Access-Control-Allow-Origin", "*")
-        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+func enableCORS(w *http.ResponseWriter, r *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 
-        if strings.HasSuffix(r.URL.Path, ".js") {
-            w.Header().Set("Content-Type", "application/javascript")
-        }
-        http.FileServer(fs).ServeHTTP(w, r)
-    })
+	if r.Method == "OPTIONS" {
+		(*w).WriteHeader(http.StatusOK)
+		return
+	}
 }

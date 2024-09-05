@@ -39,18 +39,19 @@ const App = () => {
 
   const handleDeleteTask = async (id) => {
     try {
-      await deleteTask(id);
-      setTasks(tasks.filter(task => task.id !== id));
+      const result = await deleteTask(id);
+      console.log('Delete task result:', result);
+      setTasks(tasks.filter(task => task.ID !== id));
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error('Error deleting task:', error.message);
     }
   }
 
-  const handleUpdateTask = async (id) => {
+  const handleUpdateTask = async (id, currentDoneStatus) => {
     try {
-      const updatedTask = await updateTask(id);
+      const updatedTask = await updateTask(id, !currentDoneStatus);
       setTasks(tasks.map(task => 
-        task.id === id ? { ...task, done: updatedTask.done } : task
+        task.ID === id ? { ...task, Done: updatedTask.Done } : task
       ));
     } catch (error) {
       console.error('Error updating task:', error);
@@ -90,13 +91,13 @@ const App = () => {
                   </span>
                   <div>
                     <button 
-                      onClick={() => handleUpdateTask(task.ID)}
+                      onClick={() => handleUpdateTask(task.ID, task.Done)}
                       className={`mr-2 px-3 py-1 rounded ${task.Done ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
                     >
                       {task.Done ? 'Undo' : 'Done'}
                     </button>
                     <button 
-                      onClick={() => handleDeleteTask(task.id)}
+                      onClick={() => handleDeleteTask(task.ID)}
                       className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded"
                     >
                       Delete

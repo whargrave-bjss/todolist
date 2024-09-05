@@ -8,32 +8,27 @@ import (
 )
 
 func main() {
-
 	done := make(chan struct{})
 	commandChan := make(chan Command)
 	go commandHandler(commandChan, done)
 
-	
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/add-task", addTaskHandler)
-	http.HandleFunc("/delete-task/", deleteTaskHandler)
-	http.HandleFunc("/update-task/", updateTaskHandler)
+	// Set up API routes
+	http.HandleFunc("/api/tasks", tasksHandler)
+	http.HandleFunc("/api/add-task", addTaskHandler)
+	http.HandleFunc("/api/delete-task/", deleteTaskHandler)
+	http.HandleFunc("/api/update-task/", updateTaskHandler)
 
-
-	fs := customFileServer(http.Dir("static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
-
-	
+	// Start the HTTP server in a goroutine
 	go func() {
-		log.Println("Listening on :3000...")
-		err := http.ListenAndServe(":3000", nil)
+		log.Println("Starting server on :8080...")
+		err := http.ListenAndServe(":8080", nil)
 		if err != nil {
 			log.Fatal(err)
 		}
 		close(done)
 	}()
 
-
+	// Your existing CLI loop
 	for {
 		fmt.Println("\nAvailable commands: 1: Server_Status, 2: TASKS 3: Add Task 4: Delete Task 5: Complete Task Q: Quit")
 		fmt.Print("Enter command '1', '2', '3', '4', '5': ")
