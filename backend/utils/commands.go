@@ -1,4 +1,4 @@
-package commands
+package utils
 
 import (
 	"encoding/json"
@@ -6,29 +6,41 @@ import (
 	"os"
 	"strings"
 	"time"
-	"todolist/types"
+	
 )
 
 
 const filename = "tasks.json"
 
-func LoadTasks() ([]types.Task, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
+func LoadTasks() ([]Task, error) {
 
-	var taskList types.TaskList
-	err = json.Unmarshal(data, &taskList)
+	var tasks []Task
+
+	
+	rows, err := db.Query("SELECT ID, UserID, Item, Done FROM tasks")
 	if err != nil {
+		return nil, fmt.Errorf("error querying tasks: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var task Task
+		err := rows.Scan(&task.ID, &task.UserId, &task.Item, &task.Done)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning task: %v", err)
+		}
+		tasks = append(tasks, task)
+	}
+	
+	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("error unmarshalling data: %v", err)
 	}
-	return taskList.Tasks, nil
+	return tasks, nil
 } 
 
-func SaveTasks(tasks []types.Task) error {
+func SaveTasks(tasks []Task) error {
 	tasks = ResetIDs(tasks)
-	taskList := types.TaskList{Tasks: tasks}
+	taskList := TaskList{Tasks: tasks}
 	data, err := json.Marshal(taskList)
 	if err != nil {
 		return fmt.Errorf("error marshalling data: %v", err)
@@ -41,18 +53,18 @@ func SaveTasks(tasks []types.Task) error {
 	return nil
 }
 
-func ResetIDs(tasks []types.Task) []types.Task {
+func ResetIDs(tasks []Task) []Task {
 	for i := range tasks {
 		tasks[i].ID = i + 1
 	}
 	return tasks
 }
-func AddTask(item string) []types.Task {
+func AddTask(item string) []Task {
 	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
-	newTask := types.Task{Item: item, ID: len(tasks) + 1, Done: false}
+	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
 	tasks = append(tasks, newTask)
 	err = SaveTasks(tasks)
 	if err != nil {
@@ -61,7 +73,7 @@ func AddTask(item string) []types.Task {
 	return ResetIDs(tasks)
 }
 
-func ListTasks(tasks []types.Task) {
+func ListTasks(tasks []Task) {
 	for _, task := range tasks {
 		status := "❌"
 		if task.Done {
@@ -71,7 +83,7 @@ func ListTasks(tasks []types.Task) {
 	}
 }
 
-func CompleteTask(itemToComplete int)  []types.Task {
+func CompleteTask(itemToComplete int)  []Task {
 	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
@@ -90,7 +102,7 @@ func CompleteTask(itemToComplete int)  []types.Task {
 	return ResetIDs(tasks)}
 
 
-func DeleteTask(itemToDelete int) []types.Task {
+func DeleteTask(itemToDelete int) []Task {
 	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
@@ -114,7 +126,7 @@ func DeleteTask(itemToDelete int) []types.Task {
 	return ResetIDs(tasks)
 }
 
-func DeleteAllCompleteTasks(tasks []types.Task) []types.Task {
+func DeleteAllCompleteTasks(tasks []Task) []Task {
 	for i, task := range tasks {
 		if task.Done {
 			tasks = append(tasks[:i], tasks[i+1:]...)
@@ -123,7 +135,7 @@ func DeleteAllCompleteTasks(tasks []types.Task) []types.Task {
 	return tasks
 }
 
-func CompletedCount(tasks []types.Task) int{
+func CompletedCount(tasks []Task) int{
 	count := 0
 	for _, task := range tasks {
 		if task.Done {

@@ -1,4 +1,4 @@
-package types
+package utils
 
 import "time"
 type Task struct {

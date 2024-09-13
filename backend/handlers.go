@@ -7,12 +7,11 @@ import (
 	"strconv"
 	"strings"
     "log"
-    "todolist/commands"
-    "todolist/types"
+    "todolist/utils"
 )
 
 
-func commandHandler(commandChan chan types.Command, done chan struct{}) {
+func commandHandler(commandChan chan utils.Command, done chan struct{}) {
     for {
         select {
         case <-done:
@@ -21,26 +20,26 @@ func commandHandler(commandChan chan types.Command, done chan struct{}) {
             var response string
             switch cmd.Type {
             case "1":
-                response = commands.GetServerStatus()
+                response = utils.GetServerStatus()
             case "2":
-                response = commands.GetAllTasks()
+                response = utils.GetAllTasks()
             case "3":
                 var newTask string
                 fmt.Print("Enter the task you want to add: ")
                 fmt.Scanln(&newTask)
-                commands.AddTask(newTask)
+                utils.AddTask(newTask)
                 response = fmt.Sprintf("%s has been added to the list of tasks", newTask)
             case "4":
                 var taskToDelete int
                 fmt.Println("Enter the number of the task you want to delete:")
                 fmt.Scanln(&taskToDelete)
-                commands.DeleteTask(taskToDelete)
+                utils.DeleteTask(taskToDelete)
                 response = "Task deleted"
             case "5":
                 var taskToComplete int
                 fmt.Print("Enter the number of the task you want to mark as completed: ")
                 fmt.Scanln(&taskToComplete)
-                commands.CompleteTask(taskToComplete)
+                utils.CompleteTask(taskToComplete)
                 response = "Task marked as completed"
             default:
                 response = "Invalid command"
@@ -58,21 +57,21 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var task types.Task
+	var task utils.Task
 	
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	tasks, err := commands.LoadTasks()
+	tasks, err := utils.LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 		return
 	} 
 	tasks = append(tasks, task)
 
-	err = commands.SaveTasks(tasks)
+	err = utils.SaveTasks(tasks)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -112,7 +111,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
     }
 
 
-    tasks, err := commands.LoadTasks()
+    tasks, err := utils.LoadTasks()
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -132,7 +131,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    err = commands.SaveTasks(tasks)
+    err = utils.SaveTasks(tasks)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -148,7 +147,7 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := commands.LoadTasks()
+	tasks, err := utils.LoadTasks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -188,12 +187,12 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
-    tasks, err := commands.LoadTasks()
+    tasks, err := utils.LoadTasks()
     if err != nil {
         http.Error(w, "Failed to load tasks", http.StatusInternalServerError)
         return
     }
-    var updatedTask *types.Task
+    var updatedTask *utils.Task
     for i := range tasks {
         if tasks[i].ID == taskID {
             tasks[i].Done = update.Done
@@ -205,7 +204,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Task not found", http.StatusNotFound)
         return
     }
-    if err := commands.SaveTasks(tasks); err != nil {
+    if err := utils.SaveTasks(tasks); err != nil {
         http.Error(w, "Failed to save tasks", http.StatusInternalServerError)
         return
     }

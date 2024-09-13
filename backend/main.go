@@ -5,15 +5,14 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"todolist/db"
-	"todolist/types"
+	"todolist/utils"
 )
 
 func main() {
-	db.InitDB()
-	defer db.Close()
+	utils.InitDB()
+	defer utils.Close()
 	done := make(chan struct{})
-	commandChan := make(chan types.Command)
+	commandChan := make(chan utils.Command)
 	go commandHandler(commandChan, done)
 
 	// Set up API routes
@@ -49,7 +48,7 @@ func main() {
 			continue
 		}
 
-		cmd := types.Command{Type: parts[0], ResponseChan: make(chan string)}
+		cmd := utils.Command{Type: parts[0], ResponseChan: make(chan string)}
 		commandChan <- cmd
 		response := <-cmd.ResponseChan
 		fmt.Println(response)
