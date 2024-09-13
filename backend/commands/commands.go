@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"encoding/json"
@@ -6,18 +6,19 @@ import (
 	"os"
 	"strings"
 	"time"
+	"todolist/types"
 )
 
 
 const filename = "tasks.json"
 
-func loadTasks() ([]Task, error) {
+func LoadTasks() ([]types.Task, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	var taskList TaskList
+	var taskList types.TaskList
 	err = json.Unmarshal(data, &taskList)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling data: %v", err)
@@ -25,9 +26,9 @@ func loadTasks() ([]Task, error) {
 	return taskList.Tasks, nil
 } 
 
-func saveTasks(tasks []Task) error {
-	tasks = resetIDs(tasks)
-	taskList := TaskList{Tasks: tasks}
+func SaveTasks(tasks []types.Task) error {
+	tasks = ResetIDs(tasks)
+	taskList := types.TaskList{Tasks: tasks}
 	data, err := json.Marshal(taskList)
 	if err != nil {
 		return fmt.Errorf("error marshalling data: %v", err)
@@ -40,27 +41,27 @@ func saveTasks(tasks []Task) error {
 	return nil
 }
 
-func resetIDs(tasks []Task) []Task {
+func ResetIDs(tasks []types.Task) []types.Task {
 	for i := range tasks {
 		tasks[i].ID = i + 1
 	}
 	return tasks
 }
-func AddTask(item string) []Task {
-	tasks, err := loadTasks()
+func AddTask(item string) []types.Task {
+	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
-	newTask := Task{Item: item, ID: len(tasks) + 1, Done: false}
+	newTask := types.Task{Item: item, ID: len(tasks) + 1, Done: false}
 	tasks = append(tasks, newTask)
-	err = saveTasks(tasks)
+	err = SaveTasks(tasks)
 	if err != nil {
 		fmt.Printf("Error saving tasks: %v\n", err)
 	}
-	return resetIDs(tasks)
+	return ResetIDs(tasks)
 }
 
-func ListTasks(tasks []Task) {
+func ListTasks(tasks []types.Task) {
 	for _, task := range tasks {
 		status := "❌"
 		if task.Done {
@@ -70,8 +71,8 @@ func ListTasks(tasks []Task) {
 	}
 }
 
-func CompleteTask(itemToComplete int)  []Task {
-	tasks, err := loadTasks()
+func CompleteTask(itemToComplete int)  []types.Task {
+	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
@@ -81,16 +82,16 @@ func CompleteTask(itemToComplete int)  []Task {
 		} else {
 			fmt.Println("Task not found")
 		}
-		err = saveTasks(tasks)
+		err = SaveTasks(tasks)
 		if err != nil {
 			fmt.Printf("Error saving tasks: %v\n", err)
 		}		
 	}
-	return resetIDs(tasks)}
+	return ResetIDs(tasks)}
 
 
-func DeleteTask(itemToDelete int) []Task {
-	tasks, err := loadTasks()
+func DeleteTask(itemToDelete int) []types.Task {
+	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
@@ -110,10 +111,10 @@ func DeleteTask(itemToDelete int) []Task {
 			}
 		} 
 	}
-	return resetIDs(tasks)
+	return ResetIDs(tasks)
 }
 
-func DeleteAllCompleteTasks(tasks []Task) []Task {
+func DeleteAllCompleteTasks(tasks []types.Task) []types.Task {
 	for i, task := range tasks {
 		if task.Done {
 			tasks = append(tasks[:i], tasks[i+1:]...)
@@ -122,7 +123,7 @@ func DeleteAllCompleteTasks(tasks []Task) []Task {
 	return tasks
 }
 
-func CompletedCount(tasks []Task) int{
+func CompletedCount(tasks []types.Task) int{
 	count := 0
 	for _, task := range tasks {
 		if task.Done {
@@ -139,13 +140,13 @@ func init() {
 }
 
 
-func getServerStatus() string {
+func GetServerStatus() string {
 	uptime := time.Since(startTune)
 	return fmt.Sprintf("Server uptime: %v", uptime)
 }
 
-func getAllTasks() string{
-	tasks, err := loadTasks()
+func GetAllTasks() string{
+	tasks, err := LoadTasks()
 	if err != nil {
 		fmt.Printf("Error loading tasks: %v\n", err)
 	}
