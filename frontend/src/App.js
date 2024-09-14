@@ -8,7 +8,15 @@ const App = () => {
   const [newTask, setNewTask] = useState('');
 
   useEffect(() => {
-    fetchTasks();
+    const loadTasks = async () => {
+      try {
+        const tasksData = await fetchTasks();
+        setTasks(tasksData);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    }
+    loadTasks();
   }, []);
 
   const fetchTasks = async () => {
@@ -17,8 +25,8 @@ const App = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
-      const data = await response.json();
-      setTasks(data);
+      const tasks = await response.json();
+      return tasks
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
