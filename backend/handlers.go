@@ -8,6 +8,7 @@ import (
 	"strings"
     "log"
     "todolist/utils"
+    "time"
 )
 
 
@@ -59,27 +60,31 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	var task utils.Task
 	
-	err := json.NewDecoder(r.Body).Decode(&task)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+    if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	tasks, err := utils.LoadTasks()
-	if err != nil {
-		fmt.Printf("Error loading tasks: %v\n", err)
-		return
-	} 
-	tasks = append(tasks, task)
 
-	err = utils.SaveTasks(tasks)
+    task.UserId = 1
+
+    result, err := utils.DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserId, task.Item, task.Done, time.Now())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error adding task", http.StatusInternalServerError)
 		return
 	}
+
+	taskID, err := result.LastInsertId() 
+	if err != nil {
+		http.Error(w, "Error adding task", http.StatusInternalServerError)
+		return
+	}
+	task.ID = int(taskID) // Convert to int
 
 	w.WriteHeader(http.StatusCreated)
+    w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(task)
 }
+
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
     enableCORS(&w, r)
@@ -160,56 +165,35 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
     enableCORS(&w, r)
-    if r.Method == "OPTIONS" {
-        return
-    }
+	if r.Method == "OPTIONS" {
+		return
+	}
+	
+	taskIDStr := r.URL.Path[len("/api/update-task/"):]
+	taskID, err := strconv.Atoi(taskIDStr)
+	if err != nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
 
-    if r.Method != "PATCH" {
-        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	var update struct {
+		Done bool `json:"done"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    parts := strings.Split(r.URL.Path, "/")
-    if len(parts) < 3 {
-        http.Error(w, "Invalid task ID", http.StatusBadRequest)
-        return
-    }
-    taskID, err := strconv.Atoi(parts[len(parts)-1])
-    if err != nil {
-        http.Error(w, "Invalid task ID", http.StatusBadRequest)
-        return
-    }
+	
+	_, err = utils.DB.Exec("UPDATE tasks SET Done = ? WHERE ID = ?", update.Done, taskID)
+	if err != nil {
+		http.Error(w, "Error updating task", http.StatusInternalServerError)
+		return
+	}
 
-    var update struct {
-        Done bool `json:"Done"`
-    }
-    if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-    tasks, err := utils.LoadTasks()
-    if err != nil {
-        http.Error(w, "Failed to load tasks", http.StatusInternalServerError)
-        return
-    }
-    var updatedTask *utils.Task
-    for i := range tasks {
-        if tasks[i].ID == taskID {
-            tasks[i].Done = update.Done
-            updatedTask = &tasks[i]
-            break
-        }
-    }
-    if updatedTask == nil {
-        http.Error(w, "Task not found", http.StatusNotFound)
-        return
-    }
-    if err := utils.SaveTasks(tasks); err != nil {
-        http.Error(w, "Failed to save tasks", http.StatusInternalServerError)
-        return
-    }
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(updatedTask)
+	// Respond with a success message
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Task updated successfully"})
 }
 
 func enableCORS(w *http.ResponseWriter, r *http.Request) {

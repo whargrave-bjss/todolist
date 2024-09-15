@@ -2,11 +2,11 @@ package utils
 
 import "time"
 type Task struct {
-	ID int
-	UserId int
-	Item string
-	Done bool
-	CreatedAt time.Time
+	ID int  `json:"ID"`
+	UserId int `json:"UserID"`
+	Item string `json:"Item"`
+	Done bool `json:"Done"`
+	CreatedAt time.Time `json:"CreatedAt"`
 }
 
 type TaskList struct {

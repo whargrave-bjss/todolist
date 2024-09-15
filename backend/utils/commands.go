@@ -17,7 +17,7 @@ func LoadTasks() ([]Task, error) {
 	var tasks []Task
 
 	
-	rows, err := db.Query("SELECT ID, UserID, Item, Done FROM tasks")
+	rows, err := DB.Query("SELECT ID, UserID, Item, Done FROM tasks")
 	if err != nil {
 		return nil, fmt.Errorf("error querying tasks: %v", err)
 	}

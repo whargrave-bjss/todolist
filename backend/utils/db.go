@@ -6,11 +6,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
+var DB *sql.DB
 
 func InitDB() () {
 	var err error
-	db, err = sql.Open("sqlite3", "./tasks.db")
+	DB, err = sql.Open("sqlite3", "./tasks.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func InitDB() () {
 		password TEXT NOT NULL
 	);
 	`
-	if _, err := db.Exec(createUsersTable); err != nil {
+	if _, err := DB.Exec(createUsersTable); err != nil {
         log.Fatal(err)
     }
 	
@@ -35,11 +35,11 @@ func InitDB() () {
 		FOREIGN KEY (UserID) REFERENCES Users(ID) ON DELETE CASCADE
 	);`
 
-	if _, err := db.Exec(createTasksTable); err != nil {
+	if _, err := DB.Exec(createTasksTable); err != nil {
 		log.Fatal(err)
 	}
 
-	SetDB(db)
+	SetDB(DB)
 
 	log.Println("Database initialized and tables created")
 
@@ -47,11 +47,11 @@ func InitDB() () {
 
 func SeedDB() {
 
-	_, err := db.Exec("DROP TABLE IF EXISTS tasks;")
+	_, err := DB.Exec("DROP TABLE IF EXISTS tasks;")
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("DROP TABLE IF EXISTS users;")
+	_, err = DB.Exec("DROP TABLE IF EXISTS users;")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func SeedDB() {
 		username TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL
 	);`
-	if _, err := db.Exec(createUsersTable); err != nil {
+	if _, err := DB.Exec(createUsersTable); err != nil {
 		log.Fatal(err)
 	}
 
@@ -73,15 +73,16 @@ func SeedDB() {
 		UserID INTEGER NOT NULL,
 		Item TEXT NOT NULL,
 		DONE BOOLEAN NOT NULL DEFAULT FALSE,
+		CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 		 FOREIGN KEY (UserID) REFERENCES users(ID) ON DELETE CASCADE
 	);`
-	if _, err := db.Exec(createTasksTable); err != nil {
+	if _, err := DB.Exec(createTasksTable); err != nil {
 		log.Fatal(err)
 	}
 
 	username := "BillyBob"
 	password := "password" 
-	result, err := db.Exec("INSERT INTO users (username, password) VALUES (?, ?)", username, password)
+	result, err := DB.Exec("INSERT INTO users (username, password) VALUES (?, ?)", username, password)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +94,7 @@ func SeedDB() {
 
 
 	taskItem := "Water Plants"
-	_, err = db.Exec("INSERT INTO tasks (UserID, Item, Done) VALUES (?, ?, ?)", userID, taskItem, false)
+	_, err = DB.Exec("INSERT INTO tasks (UserID, Item, Done) VALUES (?, ?, ?)", userID, taskItem, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,11 +103,11 @@ func SeedDB() {
 }
 
 func SetDB(database *sql.DB) {
-	db = database
+	DB = database
 }
 
 func Close() {
-    if err := db.Close(); err != nil {
+    if err := DB.Close(); err != nil {
         log.Fatal(err)
     }
 }
