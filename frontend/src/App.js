@@ -37,7 +37,7 @@ const App = () => {
     if (newTask.trim()) {
       try {
         const addedTask = await addTask(newTask);
-        setTasks([...tasks, addedTask]);
+        setTasks(prevTasks => [...prevTasks, addedTask]);
         setNewTask('');
       } catch (error) {
         console.error('Error adding task:', error);
@@ -55,11 +55,12 @@ const App = () => {
     }
   }
 
-  const handleUpdateTask = async (id, currentDoneStatus) => {
+  const handleUpdateTask = async (id, currentStatus) => {
     try {
-      const updatedTask = await updateTask(id, !currentDoneStatus);
+      const newStatus = !currentStatus;
+      await updateTask(id, newStatus);
       setTasks(tasks.map(task => 
-        task.ID === id ? { ...task, Done: updatedTask.Done } : task
+        task.ID === id ? { ...task, Done: newStatus } : task
       ));
     } catch (error) {
       console.error('Error updating task:', error);
@@ -92,7 +93,7 @@ const App = () => {
 
           <ul className="divide-y divide-gray-200">
             {Array.isArray(tasks) && tasks.map(task => (
-              <li key={task.Id} className="py-4">
+              <li key={task.ID} className="py-4">
                 <div className="flex items-center justify-between">
                   <span className={`text-lg ${task.Done ? 'line-through text-gray-500' : 'text-gray-800'}`}>
                     {task.Item}

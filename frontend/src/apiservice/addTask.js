@@ -11,7 +11,8 @@ export const addTask = async (task) => {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        return await response.json();
+        const newTask = await response.json();
+        return newTask
     } catch (error) {
         console.error('Error adding task:', error);
         throw error;
