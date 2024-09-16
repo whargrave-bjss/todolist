@@ -20,9 +20,9 @@ type Command struct {
 }
 
 type User struct {
-	ID int
-	Username string
-	Password string
-	CreatedAt time.Time
+	ID int `json:"ID"`
+	Username string `json:"Username"`
+	Password string `json:"Password"`
+	CreatedAt time.Time `json:"CreatedAt"`
 }
 

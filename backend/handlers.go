@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-    "log"
     "todolist/utils"
     "time"
+
 )
 
 
@@ -78,7 +77,7 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error adding task", http.StatusInternalServerError)
 		return
 	}
-	task.ID = int(taskID) // Convert to int
+	task.ID = int(taskID) 
 
 	w.WriteHeader(http.StatusCreated)
     w.Header().Set("Content-Type", "application/json")
@@ -97,46 +96,15 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Log the full request URL
-    log.Printf("Delete request received for path: %s", r.URL.Path)
-
-    // Extract the ID from the URL
-    parts := strings.Split(r.URL.Path, "/")
-    log.Printf("URL parts: %v", parts)
-
-    if len(parts) < 4 {
-        http.Error(w, "Invalid request path", http.StatusBadRequest)
-        return
-    }
-
-    taskId, err := strconv.Atoi(parts[len(parts)-1])
+    taskIDStr := r.URL.Path[len("/api/delete-task/"):]
+    taskId, err := strconv.Atoi(taskIDStr)
     if err != nil {
         http.Error(w, "Invalid task ID", http.StatusBadRequest)
         return
     }
 
-
-    tasks, err := utils.LoadTasks()
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
-        return
-    }
-
-    var taskDeleted bool
-    for i, task := range tasks {
-        if task.ID == taskId {
-            tasks = append(tasks[:i], tasks[i+1:]...)
-            taskDeleted = true
-            break
-        }
-    }
-
-    if !taskDeleted {
-        http.Error(w, "Task not found", http.StatusNotFound)
-        return
-    }
-
-    err = utils.SaveTasks(tasks)
+   
+    _, err = utils.DB.Exec("DELETE FROM tasks WHERE ID = ?", taskId)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -191,10 +159,66 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with a success message
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Task updated successfully"})
 }
+
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+    enableCORS(&w, r)
+    if r.Method == "OPTIONS" {
+        return
+    }
+    
+    var user utils.User
+
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+    }
+
+    hashedPassword, err := utils.HashPassword(user.Password)
+    if err != nil {
+        http.Error(w, "Error hashing password", http.StatusInternalServerError)
+        return
+    }
+
+    _, err = utils.DB.Exec("INSERT INTO users (Username, Password, CreatedAt) VALUES (?, ?, ?)", user.Username, hashedPassword, time.Now())
+    if err != nil {
+        http.Error(w, "Error registering user", http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+    enableCORS(&w, r)
+    if r.Method == "OPTIONS" {
+        return
+    }
+
+    var user utils.User
+    if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    var storedPassword string
+    err := utils.DB.QueryRow("SELECT Password FROM users WHERE Username = ?", user.Username).Scan(&storedPassword)
+    if err != nil {
+        http.Error(w, "User not found", http.StatusNotFound)
+        return
+    }
+    
+    if !utils.CheckPasswordHash(user.Password, storedPassword) {
+        http.Error(w, "Invalid password", http.StatusUnauthorized)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(map[string]string{"message": "Login successful"})
+}
+
 
 func enableCORS(w *http.ResponseWriter, r *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")

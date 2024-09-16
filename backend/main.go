@@ -10,7 +10,7 @@ import (
 
 func main() {
 	utils.InitDB()
-	utils.SeedDB()
+	
 	defer utils.Close()
 	done := make(chan struct{})
 	commandChan := make(chan utils.Command)
@@ -21,6 +21,8 @@ func main() {
 	http.HandleFunc("/api/add-task", addTaskHandler)
 	http.HandleFunc("/api/delete-task/", deleteTaskHandler)
 	http.HandleFunc("/api/update-task/", updateTaskHandler)
+	http.HandleFunc("/api/register", registerHandler)
+	http.HandleFunc("/api/login", loginHandler)
 
 
 	go func() {
