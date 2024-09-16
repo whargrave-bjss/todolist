@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { addTask } from './apiservice/addTask';
 import { deleteTask } from './apiservice/deleteTask';
 import { updateTask } from './apiservice/updateTask';
+import LoginForm from './components/LoginForm';
 import './App.css';
 const App = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -68,6 +70,7 @@ const App = () => {
   }
 
   return (
+    (isLoggedIn ? ( 
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 py-8">
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
         <div className="p-8">
@@ -119,7 +122,10 @@ const App = () => {
         </div>
       </div>
     </div>
+    ) : (
+      <LoginForm setIsLoggedIn={setIsLoggedIn} />     
+    ))
   );
-};
+}
 
 export default App;
