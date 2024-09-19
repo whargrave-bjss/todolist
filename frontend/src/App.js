@@ -3,7 +3,9 @@ import { addTask } from './apiservice/addTask';
 import { deleteTask } from './apiservice/deleteTask';
 import { updateTask } from './apiservice/updateTask';
 import { fetchTasks } from './apiservice/fetchTasks';
+import AddTaskForm from './components/AddTaskForm';
 import LoginForm from './components/LoginForm';
+import TaskList from './components/TaskList';
 import './App.css';
 const App = () => {
   const [tasks, setTasks] = useState([]);
@@ -36,7 +38,8 @@ const App = () => {
     if (newTask.trim()) {
       try {
         const addedTask = await addTask(newTask, currentUser.id);
-        setTasks(prevTasks => [...prevTasks, addedTask]);
+        setTasks(prevTasks => {
+        return Array.isArray(prevTasks) ? [...prevTasks, addedTask] : [addTask]; });
         setNewTask('');
       } catch (error) {
         console.error('Error adding task:', error);
@@ -72,50 +75,8 @@ const App = () => {
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
         <div className="p-8">
           <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">My Todo List</h1>
-          
-          <form onSubmit={handleAddTask} className="mb-6">
-            <div className="flex items-center border-b border-teal-500 py-2">
-              <input 
-                className="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
-                type="text" 
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                placeholder="Enter a new task"
-              />
-              <button 
-                className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
-                type="submit"
-              >
-                Add Task
-              </button>
-            </div>
-          </form>
-
-          <ul className="divide-y divide-gray-200">
-            {Array.isArray(tasks) && tasks.map(task => (
-              <li key={task.ID} className="py-4">
-                <div className="flex items-center justify-between">
-                  <span className={`text-lg ${task.Done ? 'line-through text-gray-500' : 'text-gray-800'}`}>
-                    {task.Item}
-                  </span>
-                  <div>
-                    <button 
-                      onClick={() => handleUpdateTask(task.ID, task.Done)}
-                      className={`mr-2 px-3 py-1 rounded ${task.Done ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
-                    >
-                      {task.Done ? 'Undo' : 'Done'}
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteTask(task.ID)}
-                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <AddTaskForm handleAddTask={handleAddTask} newTask={newTask} setNewTask={setNewTask}/>
+          <TaskList tasks={tasks} handleDeleteTask={handleDeleteTask} handleUpdateTask={handleUpdateTask}/>
         </div>
       </div>
     </div>
