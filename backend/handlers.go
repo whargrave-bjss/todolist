@@ -49,7 +49,6 @@ func commandHandler(commandChan chan utils.Command, done chan struct{}) {
     }
 }
 
-//handler functions
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
     enableCORS(&w, r)
 	if r.Method != http.MethodPost {
@@ -63,10 +62,17 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-    userId := r.Context().Value("UserID").(int)
-    task.UserId = userId
+    userID, ok := r.Context().Value("UserID").(int)
+    if !ok {
+        http.Error(w, "User not authenticated", http.StatusUnauthorized)
+        return
+    }
 
-    result, err := utils.DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserId, task.Item, task.Done, time.Now())
+    task.UserID = userID
+
+
+
+    result, err := utils.DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserID, task.Item, task.Done, time.Now())
 	if err != nil {
 		http.Error(w, "Error adding task", http.StatusInternalServerError)
 		return
@@ -215,16 +221,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Create a response object to return user details
     response := map[string]interface{}{
         "id":       user.ID,
         "Username": user.Username,
-        // Add any other fields you want to return
     }
 
     w.WriteHeader(http.StatusOK)
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(response) // Return the user object
+    json.NewEncoder(w).Encode(response) 
 }
 
 

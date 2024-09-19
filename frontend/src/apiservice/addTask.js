@@ -4,8 +4,9 @@ export const addTask = async (task, userID) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ Item: task, Done: false, UserId: userID }),
+            body: JSON.stringify({ Item: task, Done: false, UserID: userID }),
             credentials: 'include'
         });
         if (!response.ok) {

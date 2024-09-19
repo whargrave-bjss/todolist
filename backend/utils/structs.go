@@ -3,7 +3,7 @@ package utils
 import "time"
 type Task struct {
 	ID int  `json:"ID"`
-	UserId int `json:"UserID"`
+	UserID int `json:"UserID"`
 	Item string `json:"Item"`
 	Done bool `json:"Done"`
 	CreatedAt time.Time `json:"CreatedAt"`

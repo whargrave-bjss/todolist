@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 	"golang.org/x/crypto/bcrypt"
-	
 )
 
 
@@ -26,7 +25,7 @@ func LoadTasks() ([]Task, error) {
 
 	for rows.Next() {
 		var task Task
-		err := rows.Scan(&task.ID, &task.UserId, &task.Item, &task.Done)
+		err := rows.Scan(&task.ID, &task.UserID, &task.Item, &task.Done)
 		if err != nil {
 			return nil, fmt.Errorf("error scanning task: %v", err)
 		}
