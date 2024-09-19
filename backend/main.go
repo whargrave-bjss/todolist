@@ -13,15 +13,15 @@ func main() {
 	defer utils.Close()
 	done := make(chan struct{})
 	commandChan := make(chan utils.Command)
-	go commandHandler(commandChan, done)
+	go utils.CommandHandler(commandChan, done)
 
 	// Set up API routes
-	http.HandleFunc("/api/tasks", tasksHandler)
-	http.HandleFunc("/api/add-task", addTaskHandler)
-	http.HandleFunc("/api/delete-task/", deleteTaskHandler)
-	http.HandleFunc("/api/update-task/", updateTaskHandler)
-	http.HandleFunc("/api/register", registerHandler)
-	http.HandleFunc("/api/login", loginHandler)
+	http.HandleFunc("/api/tasks", utils.TasksHandler)
+	http.HandleFunc("/api/add-task", utils.AuthMiddleware(utils.AddTaskHandler))
+	http.HandleFunc("/api/delete-task/", utils.DeleteTaskHandler)
+	http.HandleFunc("/api/update-task/", utils.UpdateTaskHandler)
+	http.HandleFunc("/api/register", utils.RegisterHandler)
+	http.HandleFunc("/api/login", utils.LoginHandler)
 
 
 	go func() {

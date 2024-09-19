@@ -11,8 +11,12 @@ export const login = async (username, password) => {
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        const user = await response.json();
-        return user
+        const data = await response.json();
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.id)
+        localStorage.setItem('username', data.Username)
+        return data
     } catch (error) {
         console.error('Error adding task:', error);
         throw error;

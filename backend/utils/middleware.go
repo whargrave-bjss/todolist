@@ -12,6 +12,7 @@ import (
 
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
+		EnableCORS(&w, r)
         authHeader := r.Header.Get("Authorization")
         if authHeader == "" {
             http.Error(w, "Missing authorization header", http.StatusUnauthorized)

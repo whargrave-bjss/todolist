@@ -1,17 +1,16 @@
-package main
+package utils
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-    "todolist/utils"
     "time"
 
 )
 
 
-func commandHandler(commandChan chan utils.Command, done chan struct{}) {
+func CommandHandler(commandChan chan Command, done chan struct{}) {
     for {
         select {
         case <-done:
@@ -20,26 +19,26 @@ func commandHandler(commandChan chan utils.Command, done chan struct{}) {
             var response string
             switch cmd.Type {
             case "1":
-                response = utils.GetServerStatus()
+                response = GetServerStatus()
             case "2":
-                response = utils.GetAllTasks()
+                response = GetAllTasks()
             case "3":
                 var newTask string
                 fmt.Print("Enter the task you want to add: ")
                 fmt.Scanln(&newTask)
-                utils.AddTask(newTask)
+                AddTask(newTask)
                 response = fmt.Sprintf("%s has been added to the list of tasks", newTask)
             case "4":
                 var taskToDelete int
                 fmt.Println("Enter the number of the task you want to delete:")
                 fmt.Scanln(&taskToDelete)
-                utils.DeleteTask(taskToDelete)
+                DeleteTask(taskToDelete)
                 response = "Task deleted"
             case "5":
                 var taskToComplete int
                 fmt.Print("Enter the number of the task you want to mark as completed: ")
                 fmt.Scanln(&taskToComplete)
-                utils.CompleteTask(taskToComplete)
+                CompleteTask(taskToComplete)
                 response = "Task marked as completed"
             default:
                 response = "Invalid command"
@@ -49,14 +48,14 @@ func commandHandler(commandChan chan utils.Command, done chan struct{}) {
     }
 }
 
-func addTaskHandler(w http.ResponseWriter, r *http.Request) {
-    enableCORS(&w, r)
+func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
+    EnableCORS(&w, r)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var task utils.Task
+	var task Task
 	
     if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -72,7 +71,7 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 
 
-    result, err := utils.DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserID, task.Item, task.Done, time.Now())
+    result, err := DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserID, task.Item, task.Done, time.Now())
 	if err != nil {
 		http.Error(w, "Error adding task", http.StatusInternalServerError)
 		return
@@ -91,8 +90,8 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-    enableCORS(&w, r)
+func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+    EnableCORS(&w, r)
     if r.Method == "OPTIONS" {
         return
     }
@@ -110,7 +109,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
     }
 
    
-    _, err = utils.DB.Exec("DELETE FROM tasks WHERE ID = ?", taskId)
+    _, err = DB.Exec("DELETE FROM tasks WHERE ID = ?", taskId)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -120,13 +119,13 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]string{"message": "Task deleted successfully"})
 }
 
-func tasksHandler(w http.ResponseWriter, r *http.Request) {
-	enableCORS(&w, r)
+func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	EnableCORS(&w, r)
 	if r.Method == "OPTIONS" {
 		return
 	}
 
-	tasks, err := utils.LoadTasks()
+	tasks, err := LoadTasks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,8 +136,8 @@ func tasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
-    enableCORS(&w, r)
+func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
+    EnableCORS(&w, r)
 	if r.Method == "OPTIONS" {
 		return
 	}
@@ -159,7 +158,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	
-	_, err = utils.DB.Exec("UPDATE tasks SET Done = ? WHERE ID = ?", update.Done, taskID)
+	_, err = DB.Exec("UPDATE tasks SET Done = ? WHERE ID = ?", update.Done, taskID)
 	if err != nil {
 		http.Error(w, "Error updating task", http.StatusInternalServerError)
 		return
@@ -169,25 +168,25 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Task updated successfully"})
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
-    enableCORS(&w, r)
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+    EnableCORS(&w, r)
     if r.Method == "OPTIONS" {
         return
     }
     
-    var user utils.User
+    var user User
 
     if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
     }
 
-    hashedPassword, err := utils.HashPassword(user.Password)
+    hashedPassword, err := HashPassword(user.Password)
     if err != nil {
         http.Error(w, "Error hashing password", http.StatusInternalServerError)
         return
     }
 
-    _, err = utils.DB.Exec("INSERT INTO users (Username, Password, CreatedAt) VALUES (?, ?, ?)", user.Username, hashedPassword, time.Now())
+    _, err = DB.Exec("INSERT INTO users (Username, Password, CreatedAt) VALUES (?, ?, ?)", user.Username, hashedPassword, time.Now())
     if err != nil {
         http.Error(w, "Error registering user", http.StatusInternalServerError)
         return
@@ -197,33 +196,40 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-    enableCORS(&w, r)
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+    EnableCORS(&w, r)
     if r.Method == "OPTIONS" {
         return
     }
 
-    var user utils.User
+    var user User
     if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
         http.Error(w, "Invalid request body", http.StatusBadRequest)
         return
     }
 
     var storedPassword string
-    err := utils.DB.QueryRow("SELECT Password, ID FROM users WHERE Username = ?", user.Username).Scan(&storedPassword, &user.ID)
+    err := DB.QueryRow("SELECT Password, ID FROM users WHERE Username = ?", user.Username).Scan(&storedPassword, &user.ID)
     if err != nil {
         http.Error(w, "User not found", http.StatusNotFound)
         return
     }
     
-    if !utils.CheckPasswordHash(user.Password, storedPassword) {
+    if !CheckPasswordHash(user.Password, storedPassword) {
         http.Error(w, "Invalid password", http.StatusUnauthorized)
+        return
+    }
+
+    token, err := CreateToken(user.ID)
+    if err != nil {
+        http.Error(w, "Error creating token", http.StatusInternalServerError)
         return
     }
 
     response := map[string]interface{}{
         "id":       user.ID,
         "Username": user.Username,
+        "token": token,
     }
 
     w.WriteHeader(http.StatusOK)
@@ -232,7 +238,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func enableCORS(w *http.ResponseWriter, r *http.Request) {
+func EnableCORS(w *http.ResponseWriter, r *http.Request) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PATCH, DELETE")
 	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
