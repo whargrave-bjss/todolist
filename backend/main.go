@@ -10,7 +10,6 @@ import (
 
 func main() {
 	utils.InitDB()
-	
 	defer utils.Close()
 	done := make(chan struct{})
 	commandChan := make(chan utils.Command)

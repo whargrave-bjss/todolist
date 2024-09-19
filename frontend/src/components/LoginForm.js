@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { register } from '../apiservice/register';
 import { login } from '../apiservice/login';
 
-const LoginForm = ({ setIsLoggedIn }) => {
+const LoginForm = ({ setIsLoggedIn, setCurrentUser }) => {
     const [isRegistering, setIsRegistering] = useState(false);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -24,6 +24,7 @@ const LoginForm = ({ setIsLoggedIn }) => {
             const user = await login(username, password);
             console.log('Login successful:', user);
             setIsLoggedIn(true); 
+            setCurrentUser(user);
         } catch (error) {
             console.error('Login failed:', error);
         }

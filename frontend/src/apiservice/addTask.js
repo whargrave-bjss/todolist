@@ -1,11 +1,11 @@
-export const addTask = async (task) => {
+export const addTask = async (task, userID) => {
     try {
         const response = await fetch('http://localhost:8080/api/add-task', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ Item: task, Done: false }),
+            body: JSON.stringify({ Item: task, Done: false, UserId: userID }),
             credentials: 'include'
         });
         if (!response.ok) {

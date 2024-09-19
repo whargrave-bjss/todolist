@@ -63,8 +63,8 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-
-    task.UserId = 1
+    userId := r.Context().Value("UserID").(int)
+    task.UserId = userId
 
     result, err := utils.DB.Exec("INSERT INTO tasks (UserID, Item, Done, CreatedAt) VALUES (?, ?, ?, ?)", task.UserId, task.Item, task.Done, time.Now())
 	if err != nil {
@@ -204,7 +204,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     var storedPassword string
-    err := utils.DB.QueryRow("SELECT Password FROM users WHERE Username = ?", user.Username).Scan(&storedPassword)
+    err := utils.DB.QueryRow("SELECT Password, ID FROM users WHERE Username = ?", user.Username).Scan(&storedPassword, &user.ID)
     if err != nil {
         http.Error(w, "User not found", http.StatusNotFound)
         return
@@ -215,8 +215,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Create a response object to return user details
+    response := map[string]interface{}{
+        "id":       user.ID,
+        "Username": user.Username,
+        // Add any other fields you want to return
+    }
+
     w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]string{"message": "Login successful"})
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(response) // Return the user object
 }
 
 

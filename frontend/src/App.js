@@ -8,6 +8,9 @@ const App = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -19,7 +22,7 @@ const App = () => {
       }
     }
     loadTasks();
-  }, []);
+  }, );
 
   const fetchTasks = async () => {
     try {
@@ -27,8 +30,9 @@ const App = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
-      const tasks = await response.json();
-      return tasks
+      const allTasks = await response.json();
+      const userTasks = allTasks.filter(task => task.UserId === currentUser.id); 
+      return userTasks;
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
@@ -38,7 +42,7 @@ const App = () => {
     e.preventDefault();
     if (newTask.trim()) {
       try {
-        const addedTask = await addTask(newTask);
+        const addedTask = await addTask(newTask, currentUser.id);
         setTasks(prevTasks => [...prevTasks, addedTask]);
         setNewTask('');
       } catch (error) {
@@ -123,7 +127,7 @@ const App = () => {
       </div>
     </div>
     ) : (
-      <LoginForm setIsLoggedIn={setIsLoggedIn} />     
+      <LoginForm setIsLoggedIn={setIsLoggedIn} setCurrentUser={setCurrentUser} />     
     ))
   );
 }

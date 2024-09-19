@@ -59,9 +59,10 @@ func SeedDB() {
 	
 	createUsersTable := `
 	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL
+		ID INTEGER PRIMARY KEY AUTOINCREMENT,
+		Username TEXT NOT NULL UNIQUE,
+		Password TEXT NOT NULL,
+		CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
 	if _, err := DB.Exec(createUsersTable); err != nil {
 		log.Fatal(err)
