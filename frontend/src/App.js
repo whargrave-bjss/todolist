@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { addTask } from './apiservice/addTask';
 import { deleteTask } from './apiservice/deleteTask';
 import { updateTask } from './apiservice/updateTask';
+import { fetchTasks } from './apiservice/fetchTasks';
 import LoginForm from './components/LoginForm';
 import './App.css';
 const App = () => {
@@ -24,19 +25,11 @@ const App = () => {
     loadTasks();
   }, );
 
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/api/tasks');
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
-      }
-      const allTasks = await response.json();
-      const userTasks = allTasks.filter(task => task.UserId === currentUser.id); 
-      return userTasks;
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+  useEffect(() => {
+    if (currentUser) {
+      fetchTasks().then(tasks => setTasks(tasks));
     }
-  };
+  }, [currentUser]);
 
   const handleAddTask = async (e) => {
     e.preventDefault();

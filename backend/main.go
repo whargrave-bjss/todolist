@@ -16,7 +16,7 @@ func main() {
 	go utils.CommandHandler(commandChan, done)
 
 	// Set up API routes
-	http.HandleFunc("/api/tasks", utils.TasksHandler)
+	http.HandleFunc("/api/tasks", utils.AuthMiddleware(utils.TasksHandler))
 	http.HandleFunc("/api/add-task", utils.AuthMiddleware(utils.AddTaskHandler))
 	http.HandleFunc("/api/delete-task/", utils.DeleteTaskHandler)
 	http.HandleFunc("/api/update-task/", utils.UpdateTaskHandler)

@@ -125,11 +125,30 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := LoadTasks()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	userID, ok := r.Context().Value("UserID").(int)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    rows, err := DB.Query("SELECT ID, Item, Done, CreatedAt FROM tasks WHERE UserID = ?", userID)
+    if err != nil {
+        http.Error(w, "Error fetching tasks", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var tasks []Task
+    for rows.Next() {
+        var task Task
+        err := rows.Scan(&task.ID, &task.Item, &task.Done, &task.CreatedAt)
+        if err != nil {
+            http.Error(w, "Error scanning tasks", http.StatusInternalServerError)
+            return
+        }
+        task.UserID = userID 
+        tasks = append(tasks, task)
+    }
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tasks)
